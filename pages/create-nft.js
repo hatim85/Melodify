@@ -55,14 +55,15 @@ const CreateMusicNFT = () => {
                 <p className="font-poppins dark:text-white text-nft-black-1 font-semibold text-xl">MP3, WAV, OGG. Max 50MB.</p>
 
                 <div className="my-12 w-full flex justify-center">
-                  <Image
+                  {/* <Image
                     src={images.upload}
                     width={100}
                     height={100}
                     objectFit="contain"
+                    fill={true}
                     alt="file upload"
                     className={theme === 'light' ? 'filter invert' : undefined}
-                  />
+                  /> */}
                 </div>
 
                 <p className="font-poppins dark:text-white text-nft-black-1 font-semibold text-sm">Drag and Drop Music File</p>

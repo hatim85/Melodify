@@ -109,7 +109,7 @@ const Navbar = () => {
               setActive('Explore Tracks');
             }}
           >
-            <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
+            {/* <Image src={images.logo02} fill={true} objectFit="contain" width={32} height={32} alt="logo" /> */}
             <p className=" dark:text-white text-nft-black-1 font-semibold text-lg ml-1">MusicNFT</p>
           </div>
         </Link>
@@ -121,7 +121,7 @@ const Navbar = () => {
               setIsOpen(false);
             }}
           >
-            <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
+            {/* <Image src={images.logo02} fill={true} objectFit="contain" width={32} height={32} alt="logo" /> */}
           </div>
         </Link>
       </div>
@@ -154,25 +154,27 @@ const Navbar = () => {
       <div className="hidden md:flex ml-2">
         {isOpen
           ? (
-            <Image
+          {/*  <Image
               src={images.cross}
               objectFit="contain"
               width={20}
               height={20}
+              fill={true}
               alt="close"
               onClick={() => setIsOpen(false)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />
+            />   */}
           ) : (
-            <Image
+          {/*  <Image
               src={images.menu}
               objectFit="contain"
               width={25}
               height={25}
+              fill={true}
               alt="menu"
               onClick={() => setIsOpen(true)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />
+            />   */}
           )}
 
         {isOpen && (

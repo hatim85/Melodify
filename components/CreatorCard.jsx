@@ -15,20 +15,22 @@ const CreatorCard = ({ rank, creatorImage, creatorName, creatorGenres, songCount
 
       <div className="my-2 flex justify-center">
         <div className="relative w-20 h-20 minlg:w-28 minlg:h-28">
-          <Image
+          {/* <Image
             src={creatorImage}
             layout="fill"
             objectFit="cover"
             alt="creator"
             className="rounded-full"
-          />
+            fill={true}
+          /> */}
           <div className="absolute w-4 h-4 minlg:w-7 minlg:h-7 bottom-2 -right-0">
-            <Image
+            {/* <Image
               src={images.tick}
               layout="fill"
               objectFit="contain"
               alt="tick"
-            />
+              fill={true}
+            /> */}
           </div>
         </div>
       </div>

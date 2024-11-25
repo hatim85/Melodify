@@ -29,12 +29,13 @@ const Modal = ({ header, body, footer, handleClose }) => {
             className="relative w-3 h-3 minlg:w-6 minlg:h-6 cursor-pointer"
             onClick={handleClose}
           >
-            <Image
+            {/* <Image
               src={images.cross}
               layout="fill"
               className={theme === 'light' ? 'filter invert' : undefined}
               alt="Close"
-            />
+              fill={true}
+            /> */}
           </div>
         </div>
 
