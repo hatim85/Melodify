@@ -23,7 +23,8 @@ const Footer = () => {
         {/* Logo and Email Updates */}
         <div className="flexStart flex-1 flex-col">
           <div className="flexCenter cursor-pointer">
-            {/* <Image src={images.logoMusic} objectFit="contain" width={32} height={32} alt="logo" fill={true}/> */}
+           {/* {console.log(images)} */}
+            <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
             <p className=" dark:text-white text-nft-dark font-semibold text-lg ml-1">TuneMint</p>
           </div>
           <p className="font-poppins dark:text-white text-nft-black-1 font-semibold text-base mt-6">Stay in the Loop</p>
@@ -57,18 +58,18 @@ const Footer = () => {
             TuneMint, Inc. All Rights Reserved
           </p>
           <div className="flex flex-row sm:mt-4">
-            {[images.instagram, images.twitter, images.spotify, images.discord].map((image, index) => (
+            {[images.instagram, images.twitter, images.telegram, images.discord].map((image, index) => (
               <div className="mx-2 cursor-pointer" key={index}>
-                {/* <Image
+                {/* {console.log(image)} */}
+                <Image
                   src={image}
                   key={index}
-                  fill={true}
                   objectFit="contain"
                   width={24}
                   height={24}
                   alt="social"
                   className={theme === 'light' ? 'filter invert' : undefined}
-                /> */}
+                />
               </div>
             ))}
           </div>

@@ -13,16 +13,15 @@ const MenuItems = ({ isMobile, active, setActive, setIsOpen }) => {
   const generateLink = (i) => {
     switch (i) {
       case 0: return '/';
-      case 1: return '/tracks';
-      case 2: return '/artists';
-      case 3: return '/my-collection';
+      case 1: return '/listed-nfts';
+      case 2: return '/my-nfts';
       default: return '/';
     }
   };
 
   return (
     <ul className={`list-none flexCenter flex-row ${isMobile && 'flex-col h-full'}`}>
-      {['Explore Tracks', 'Tracks', 'Artists', 'My Collection'].map((item, i) => (
+      {['Explore NFT', 'Listed NFT', 'My NFT'].map((item, i) => (
         <li
           key={i}
           onClick={() => {
@@ -45,12 +44,12 @@ const ButtonGroup = ({ setActive, router, setIsOpen }) => {
 
   return currentAccount ? (
     <Button
-      btnName="Create Music NFT"
+      btnName="Create NFT"
       classStyles="mx-2 rounded-xl"
       handleClick={() => {
         setActive('');
         setIsOpen(false);
-        router.push('/create-music-nft');
+        router.push('/create-nft');
       }}
     />
   ) : (
@@ -65,18 +64,15 @@ const ButtonGroup = ({ setActive, router, setIsOpen }) => {
 const checkActive = (active, setActive, router) => {
   switch (router.pathname) {
     case '/':
-      if (active !== 'Explore Tracks') setActive('Explore Tracks');
+      if (active !== 'Explore NFT') setActive('Explore NFT');
       break;
-    case '/tracks':
-      if (active !== 'Tracks') setActive('Tracks');
+    case '/listed-nfts':
+      if (active !== 'Listed NFT') setActive('Listed NFT');
       break;
-    case '/artists':
-      if (active !== 'Artists') setActive('Artists');
+    case '/my-nfts':
+      if (active !== 'My NFT') setActive('My NFT');
       break;
-    case '/my-collection':
-      if (active !== 'My Collection') setActive('My Collection');
-      break;
-    case '/create-music-nft':
+    case '/create-nft':
       setActive('');
       break;
     default:
@@ -87,7 +83,7 @@ const checkActive = (active, setActive, router) => {
 const Navbar = () => {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-  const [active, setActive] = useState('Explore Tracks');
+  const [active, setActive] = useState('Explore NFT');
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -106,10 +102,10 @@ const Navbar = () => {
           <div
             className="flexCenter md:hidden cursor-pointer"
             onClick={() => {
-              setActive('Explore Tracks');
+              setActive('Explore NFT');
             }}
           >
-            {/* <Image src={images.logo02} fill={true} objectFit="contain" width={32} height={32} alt="logo" /> */}
+            <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
             <p className=" dark:text-white text-nft-black-1 font-semibold text-lg ml-1">MusicNFT</p>
           </div>
         </Link>
@@ -117,11 +113,11 @@ const Navbar = () => {
           <div
             className="hidden md:flex"
             onClick={() => {
-              setActive('Explore Tracks');
+              setActive('Explore NFT');
               setIsOpen(false);
             }}
           >
-            {/* <Image src={images.logo02} fill={true} objectFit="contain" width={32} height={32} alt="logo" /> */}
+            <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
           </div>
         </Link>
       </div>
@@ -154,27 +150,25 @@ const Navbar = () => {
       <div className="hidden md:flex ml-2">
         {isOpen
           ? (
-          {/*  <Image
+            <Image
               src={images.cross}
               objectFit="contain"
               width={20}
               height={20}
-              fill={true}
               alt="close"
               onClick={() => setIsOpen(false)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />   */}
+            />   
           ) : (
-          {/*  <Image
+           <Image
               src={images.menu}
               objectFit="contain"
               width={25}
               height={25}
-              fill={true}
               alt="menu"
               onClick={() => setIsOpen(true)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />   */}
+            />   
           )}
 
         {isOpen && (

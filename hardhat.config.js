@@ -14,7 +14,7 @@ module.exports = {
     //   accounts: [privateKey],
     // },
     crossfi:{
-      url:`https://crossfi-testnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      url:`https://crossfi-testnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
       chainId:4157,
       accounts:[process.env.PRIVATE_KEY]
     },

@@ -2,12 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Web3Modal from 'web3modal';
 import { ethers } from 'ethers';
+import { useRouter } from 'next/router';
 import axios from 'axios';
-// import PinataSDK from '@pinata/sdk';
-import { PinataSDK } from 'pinata-web3';
 import { MarketAddress, MarketAddressABI } from './constants';
 import dotenv from 'dotenv';
-
+import { create as ipfsHttpClient } from 'ipfs-http-client'
 dotenv.config();
 
 // Initialize Pinata SDK
@@ -22,6 +21,8 @@ export const NFTProvider = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState('');
   const [isLoadingNFT, setIsLoadingNFT] = useState(false);
   const nftCurrency = 'XFI';
+  const auth = useRef(null);
+  const client = useRef(null);
 
   // Check if Wallet is Connected
   const checkIfWalletIsConnected = async () => {
@@ -42,79 +43,133 @@ export const NFTProvider = ({ children }) => {
     window.location.reload();
   };
 
-  // Upload Music and Image Files to IPFS via Pinata
-  const uploadFilesToIPFS = async (musicFile, imageFile) => {
-    try {
-      const formDataMusic = new FormData();
-      formDataMusic.append('file', musicFile);
+  const fetchAuth = async () => {
+    const response = await fetch('/api/secure');
+    const data = await response.json();
+    console.log('Fetch auth data: ', data)
+    return data;
+  };
 
-      const metadataMusic = JSON.stringify({
+  // Maintain state for URLs
+  let uploadedMusicUrl = null;
+  let uploadedImageUrl = null;
+
+  // Upload Music File to IPFS
+  const uploadMusicToIPFS = async (musicFile) => {
+    try {
+      if (!musicFile) {
+        alert('Please select a music file to upload.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', musicFile);
+
+      const metadata = JSON.stringify({
         name: 'Music Upload',
         keyvalues: {
           type: 'audio',
         },
       });
-      formDataMusic.append('pinataMetadata', metadataMusic);
+      formData.append('pinataMetadata', metadata);
 
-      const optionsMusic = JSON.stringify({
+      const options = JSON.stringify({
         cidVersion: 1,
       });
-      formDataMusic.append('pinataOptions', optionsMusic);
+      formData.append('pinataOptions', options);
 
-      // Upload Music File
-      const musicResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      console.log('Sending music file to Pinata...');
+
+      const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
         },
-        body: formDataMusic,
+        body: formData,
       });
 
-      const musicResult = await musicResponse.json();
-      if (!musicResponse.ok) {
-        throw new Error(`Failed to upload music: ${musicResult.error || 'Unknown error'}`);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`Failed to upload music: ${result.error || 'Unknown error'}`);
       }
 
-      const musicUrl = `${process.env.PINATA_GATEWAY}/ipfs/${musicResult.IpfsHash}`;
+      // uploadedMusicUrl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${result.IpfsHash}`;
+      uploadedMusicUrl = `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
+      console.log('Music URL:', uploadedMusicUrl);
 
-      // Upload Image File
-      const formDataImage = new FormData();
-      formDataImage.append('file', imageFile);
+      checkIfBothUploaded();
 
-      const metadataImage = JSON.stringify({
+      return uploadedMusicUrl;
+    } catch (error) {
+      console.error('Error uploading music to IPFS:', error);
+      throw error;
+    }
+  };
+
+  // Upload Image File to IPFS
+  const uploadImageToIPFS = async (imageFile) => {
+    try {
+      if (!imageFile) {
+        alert('Please select an image file to upload.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', imageFile);
+
+      const metadata = JSON.stringify({
         name: 'Image Upload',
         keyvalues: {
           type: 'image',
         },
       });
-      formDataImage.append('pinataMetadata', metadataImage);
+      formData.append('pinataMetadata', metadata);
 
-      const optionsImage = JSON.stringify({
+      const options = JSON.stringify({
         cidVersion: 1,
       });
-      formDataImage.append('pinataOptions', optionsImage);
+      formData.append('pinataOptions', options);
 
-      const imageResponse = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      console.log('Sending image file to Pinata...');
+
+      const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
         },
-        body: formDataImage,
+        body: formData,
       });
 
-      const imageResult = await imageResponse.json();
-      if (!imageResponse.ok) {
-        throw new Error(`Failed to upload image: ${imageResult.error || 'Unknown error'}`);
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`Failed to upload image: ${result.error || 'Unknown error'}`);
       }
 
-      const imageUrl = `${process.env.PINATA_GATEWAY}/ipfs/${imageResult.IpfsHash}`;
+      // uploadedImageUrl = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${result.IpfsHash}`;
+      uploadedImageUrl = `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
+      console.log('Image URL:', uploadedImageUrl);
 
-      console.log('Music URL:', musicUrl);
-      console.log('Image URL:', imageUrl);
-      return { musicUrl, imageUrl };
+      checkIfBothUploaded();
+
+      return uploadedImageUrl;
     } catch (error) {
-      console.error('Error uploading files to IPFS:', error);
+      console.error('Error uploading image to IPFS:', error);
       throw error;
+    }
+  };
+
+
+  // Check if both files are uploaded
+  const checkIfBothUploaded = () => {
+    if (uploadedMusicUrl && uploadedImageUrl) {
+      console.log('Both files uploaded successfully!');
+      console.log('Music URL:', uploadedMusicUrl);
+      console.log('Image URL:', uploadedImageUrl);
+
+      // Perform any final actions here (e.g., save URLs, update UI)
+      return { uploadedImageUrl, uploadedMusicUrl };
+    } else {
+      console.log('Waiting for both files to be uploaded...');
     }
   };
 
@@ -134,7 +189,7 @@ export const NFTProvider = ({ children }) => {
       const response = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
@@ -146,7 +201,8 @@ export const NFTProvider = ({ children }) => {
         throw new Error(`Failed to upload JSON: ${result.error || "Unknown error"}`);
       }
 
-      const url = `${process.env.PINATA_GATEWAY}/ipfs/${result.IpfsHash}`;
+      // const url = `${process.env.NEXT_PUBLIC_PINATA_GATEWAY}/ipfs/${result.IpfsHash}`;
+      const url = `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
       console.log("Uploaded JSON URL:", url);
       return url;
     } catch (error) {
@@ -156,28 +212,24 @@ export const NFTProvider = ({ children }) => {
   };
 
   // Create an NFT with Music and Image Metadata
-  const createNFT = async (formInput, musicFile, imageFile, router) => {
+  const createNFT = async (formInput, router) => {
     const { name, description, price } = formInput;
 
     // Validate inputs
-    if (!name || !description || !price || !musicFile || !imageFile) {
-      alert('All fields are required!');
+    if (!name || !description || !price || !uploadedMusicUrl || !uploadedImageUrl) {
+      alert('All fields are required, including music and image uploads!');
       return;
     }
 
     try {
-      // Upload music and image to IPFS
-      const { musicUrl, imageUrl } = await uploadFilesToIPFS(musicFile, imageFile);
-
       // Construct metadata
       const metadata = {
         name,
         description,
-        audio: musicUrl, // Link to the uploaded music file
-        image: imageUrl, // Link to the uploaded image
+        audio: uploadedMusicUrl, // URL of the uploaded music file
+        image: uploadedImageUrl, // URL of the uploaded image file
       };
 
-      // Upload metadata to IPFS
       console.log('Uploading metadata to Pinata...');
       const metadataUrl = await uploadMetadataToIPFS(metadata);
 
@@ -235,7 +287,7 @@ export const NFTProvider = ({ children }) => {
         {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${process.env.PINATA_JWT}`,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
           },
         }
       );
@@ -251,32 +303,37 @@ export const NFTProvider = ({ children }) => {
   };
 
   const createSale = async (url, formInputPrice, isReselling, id) => {
-    const cid = url.split('/').pop(); // Extract CID from the URL
-    const isPinned = await validateFileOnPinata(cid);
-    if (!isPinned) return alert('File is not pinned on Pinata!');
+    try {
+      const cid = url.split('/').pop(); // Extract CID from the URL
+      const isPinned = await validateFileOnPinata(cid);
+      if (!isPinned) return alert('File is not pinned on Pinata!');
 
-    const web3Modal = new Web3Modal();
-    const connection = await web3Modal.connect();
-    const provider = new ethers.providers.Web3Provider(connection);
-    const signer = provider.getSigner();
+      const web3Modal = new Web3Modal();
+      const connection = await web3Modal.connect();
+      const provider = new ethers.providers.Web3Provider(connection);
+      const signer = provider.getSigner();
 
-    const price = ethers.utils.parseUnits(formInputPrice, 'XFI');
-    const contract = fetchContract(signer);
-    const listingPrice = await contract.getListingPrice();
+      const price = ethers.utils.parseUnits(formInputPrice, "ether");
+      const contract = fetchContract(signer);
+      const listingPrice = await contract.getListingPrice();
 
-    const transaction = !isReselling
-      ? await contract.createToken(url, price, { value: listingPrice.toString() })
-      : await contract.resellToken(id, price, { value: listingPrice.toString() });
+      const transaction = !isReselling
+        ? await contract.createToken(url, price, { value: listingPrice.toString() })
+        : await contract.resellToken(id, price, { value: listingPrice.toString() });
 
-    setIsLoadingNFT(true);
-    await transaction.wait();
+      setIsLoadingNFT(true);
+      const receipt=await transaction.wait();
+      console.log('Transaction successful:', receipt);
+    } catch (error) {
+      console.error('Error during createSale:', error);
+    }
   };
 
 
   const fetchNFTs = async () => {
     setIsLoadingNFT(false);
 
-    const provider = new ethers.providers.JsonRpcProvider(`https://crossfi-testnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`);
+    const provider = new ethers.providers.JsonRpcProvider(`https://crossfi-testnet.g.alchemy.com/v2/3Vx8_tAtSAwagrnHSCstu5sXzRrR6ZRT`);
     const contract = fetchContract(provider);
 
     const data = await contract.fetchMarketItems();
@@ -290,7 +347,7 @@ export const NFTProvider = ({ children }) => {
         const isPinned = await validateFileOnPinata(cid);
         if (!isPinned) return null; // Skip unpinned files
 
-        const price = ethers.utils.formatUnits(unformattedPrice.toString(), 'XFI');
+        const price = ethers.utils.formatUnits(unformattedPrice.toString(), "ether");
 
         return {
           price,
@@ -339,6 +396,8 @@ export const NFTProvider = ({ children }) => {
           price,
           tokenId: tokenId.toNumber(),
           seller,
+          uploadImageToIPFS,
+          uploadMusicToIPFS,
           owner,
           image,
           name,
@@ -350,18 +409,47 @@ export const NFTProvider = ({ children }) => {
       return items.filter((item) => item !== null); // Filter out unpinned items
     } catch (error) {
       console.error("Error fetching NFTs:", error);
-      return [];
+      return error;
     }
   };
+
+  const getClient = (auth) => {
+    if (!auth) {
+      throw new Error('Authorization token is required to initialize the IPFS client');
+    }
+
+    const responseClient = ipfsHttpClient({
+      host: 'api.pinata.cloud',  // Pinata IPFS API host
+      port: 443,                // Standard HTTPS port
+      protocol: 'https',        // Use HTTPS for secure communication
+      apiPath: '/api/v0',       // Default API path for Pinata
+      headers: {
+        authorization: auth,    // Include the authorization token in the headers
+      },
+    });
+
+    return responseClient;
+  };
+
 
 
   useEffect(() => {
     checkIfWalletIsConnected();
+    console.log(process.env);
+    console.log(process.env.BASE_URL)
+    console.log("pinata api key: ", process.env.NEXT_PUBLIC_PINATA_API_KEY);
+    console.log("alchemy api key: ", process.env.NEXT_PUBLIC_ALCHEMY_API_KEY);
+    console.log("pinata api secret: ", process.env.NEXT_PUBLIC_PINATA_API_SECRET);
     const initialize = async () => {
       try {
         const { data } = await fetchAuth();  // Fetch auth token from API
+        console.log("data from auth: ", data);
         auth.current = data;  // Store the auth token
-        client.current = getClient(auth.current);  // Initialize the IPFS client with the token
+        console.log("auth.current after assignment: ", auth.current);
+
+        // Assuming getClient is a function to initialize the IPFS client
+        client.current = getClient(auth.current);
+        console.log("Client initialized: ", client.current);
       } catch (error) {
         console.error("Error fetching auth data:", error);
       }
@@ -377,11 +465,15 @@ export const NFTProvider = ({ children }) => {
         nftCurrency,
         connectWallet,
         currentAccount,
-        uploadFilesToIPFS,
         createNFT,
         fetchNFTs,
+        uploadImageToIPFS,
+        uploadMusicToIPFS,
         createSale,
         isLoadingNFT,
+        fetchAuth,
+        buyNFT,
+        fetchMyNFTsOrListedNFTs
       }}
     >
       {children}
