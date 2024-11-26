@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useContext } from 'react';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
-
 import { NFTContext } from '../context/NFTContext';
 import { Banner, CreatorCard, Loader, NFTCard, SearchBar } from '../components';
 import images from '../assets';
@@ -16,24 +15,54 @@ const Home = () => {
   const { theme } = useTheme();
   const [activeSelect, setActiveSelect] = useState('Recently added');
   const [isLoading, setIsLoading] = useState(true);
-
+  
   const parentRef = useRef(null);
   const scrollRef = useRef(null);
+  
+  // Audio control references
+  const audioRefs = useRef([]);
+
+  const [userAddress, setUserAddress] = useState(null);
+
+  // Get current user's address
+  const getUserAddress = async () => {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      setUserAddress(accounts[0]);
+    }
+  };
+
+  useEffect(() => {
+    getUserAddress(); // Fetch the user's address when the component mounts
+  }, []);
 
   useEffect(() => {
     fetchNFTs()
       .then((items) => {
+        console.log("Items in index.js: ",items);
         // Filter out non-music NFTs (assuming music NFTs are identified by having an audio file URL)
-        const musicNFTs = items.filter(item => item.audioUrl); // Ensure there's an audioUrl field for music NFTs
-        setNfts(musicNFTs);
-        setNftsCopy(musicNFTs);
+        const musicNFTs = items.filter(item => item.audio); // Ensure there's an audioUrl field for music NFTs
+        console.log("Music NFTs: ", musicNFTs);
+
+        // Filter out NFTs that belong to the current user
+        if (userAddress) {
+          console.log(items[0].seller)
+          const filteredNFTs = musicNFTs.filter(item => item.seller !== userAddress);
+          
+          setNfts(filteredNFTs);
+          setNftsCopy(filteredNFTs);
+        } else {
+          setNfts(musicNFTs);
+          setNftsCopy(musicNFTs);
+        }
+
         setIsLoading(false);
       });
-  }, []);
+  }, [userAddress]); // Trigger the useEffect again when userAddress changes
 
   useEffect(() => {
     const sortedNfts = [...nfts];
-
+    
     switch (activeSelect) {
       case 'Price (low to high)':
         setNfts(sortedNfts.sort((a, b) => a.price - b.price));
@@ -68,9 +97,7 @@ const Home = () => {
 
   const handleScroll = (direction) => {
     const { current } = scrollRef;
-
     const scrollAmount = window.innerWidth > 1800 ? 270 : 210;
-
     if (direction === 'left') {
       current.scrollLeft -= scrollAmount;
     } else {
@@ -81,7 +108,6 @@ const Home = () => {
   const isScrollable = () => {
     const { current } = scrollRef;
     const { current: parent } = parentRef;
-
     if (current?.scrollWidth >= parent?.offsetWidth) {
       setHideButtons(false);
     } else {
@@ -91,7 +117,6 @@ const Home = () => {
 
   useEffect(() => {
     isScrollable();
-
     window.addEventListener('resize', isScrollable);
 
     return () => {
@@ -100,6 +125,18 @@ const Home = () => {
   });
 
   const topCreators = getCreators(nftsCopy);
+
+  // Function to handle the 10 second audio preview
+  const handleAudioPreview = (index) => {
+    const audioElement = audioRefs.current[index];
+    if (audioElement) {
+      audioElement.play();
+      setTimeout(() => {
+        audioElement.pause();
+        audioElement.currentTime = 0;  // Reset to the start
+      }, 10000); // 10 seconds
+    }
+  };
 
   return (
     <div className="flex justify-center sm:px-4 p-12">
@@ -118,7 +155,8 @@ const Home = () => {
               <h1 className="font-poppins dark:text-white text-nft-black-1 text-2xl minlg:text-4xl font-semibold ml-4 xs:ml-0">Top Music Creators</h1>
               <div className="relative flex-1 max-w-full flex mt-3" ref={parentRef}>
                 <div className="flex flex-row w-max overflow-x-scroll no-scrollbar select-none" ref={scrollRef}>
-                  {topCreators.map((creator, i) => (
+                  {/* Uncomment when you implement top creators */}
+                  {/* {topCreators.map((creator, i) => (
                     <CreatorCard
                       key={creator.seller}
                       rank={i + 1}
@@ -126,17 +164,7 @@ const Home = () => {
                       creatorName={shortenAddress(creator.seller)}
                       creatorEths={creator.sum}
                     />
-                  ))}
-                  {!hideButtons && (
-                    <>
-                      <div onClick={() => handleScroll('left')} className="absolute w-8 h-8 minlg:w-12 minlg:h-12 top-45 cursor-pointer left-0">
-                        <Image src={images.left} layout="fill" objectFit="contain" alt="left_arrow" className={theme === 'light' ? 'filter invert' : undefined} />
-                      </div>
-                      <div onClick={() => handleScroll('right')} className="absolute w-8 h-8 minlg:w-12 minlg:h-12 top-45 cursor-pointer right-0">
-                        <Image src={images.right} layout="fill" objectFit="contain" alt="left_arrow" className={theme === 'light' ? 'filter invert' : undefined} />
-                      </div>
-                    </>
-                  )}
+                  ))} */}
                 </div>
               </div>
             </div>
@@ -154,18 +182,47 @@ const Home = () => {
                 </div>
               </div>
               <div className="mt-3 w-full flex flex-wrap justify-start md:justify-center">
-                {nfts.map((nft) => (
-                  <div key={nft.tokenId} className="w-64 m-4">
-                    <NFTCard nft={nft} />
-                    {/* Add an audio player to play the music */}
-                    {nft.audioUrl && (
-                      <audio controls className="mt-2 w-full">
-                        <source src={nft.audioUrl} type="audio/mp3" />
-                        Your browser does not support the audio element.
-                      </audio>
+                {/* {nfts && Object.values(nfts).map((nft,key)=><NFTCard key={key} nft={nft} image={nft.image} /> )} */}
+                {nfts && Object.values(nfts).map((nft, key) =>
+                  <div key={key}>
+                    <div className="relative w-full h-64">
+                      <Image
+                        src={nft.image || '/default-image.png'} // Ensure default image if no image URL
+                        alt={nft.name}
+                        className="rounded-lg object-cover"
+                        height={256}
+                        width={256}
+                        objectFit="cover"
+                      />
+                    </div>
+
+                    <p className="font-poppins dark:text-white text-nft-black-1 text-xl font-semibold mt-3">{nft.name}</p>
+
+                    <p className="font-poppins dark:text-white text-nft-black-2 text-sm mt-2">{nft.description || 'No description available'}</p>
+
+                    <div className="mt-2">
+                      <span className="text-lg font-bold">{nft.price ? `Price: ${nft.price} XFI` : 'Price not available'}</span>
+                    </div>
+
+                    {nft.audio && (
+                      <div>
+                        <audio
+                          ref={(el) => audioRefs.current[key] = el}
+                          className="mt-2 w-full"
+                        >
+                          <source src={nft.audio} type="audio/mp3" />
+                          Your browser does not support the audio element.
+                        </audio>
+                        <button
+                          onClick={() => handleAudioPreview(key)}
+                          className="mt-2 text-blue-500 hover:text-blue-700"
+                        >
+                          Preview (10s)
+                        </button>
+                      </div>
                     )}
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </>

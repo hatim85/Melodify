@@ -40,7 +40,7 @@ const MenuItems = ({ isMobile, active, setActive, setIsOpen }) => {
 };
 
 const ButtonGroup = ({ setActive, router, setIsOpen }) => {
-  const { connectWallet, currentAccount } = useContext(NFTContext);
+  const { connectWallet, currentAccount,switchNetwork,networkError } = useContext(NFTContext);
 
   return currentAccount ? (
     <Button
@@ -59,6 +59,14 @@ const ButtonGroup = ({ setActive, router, setIsOpen }) => {
       handleClick={connectWallet}
     />
   );
+  {networkError && (
+    <div className="w-auto m-5 p-5 absolute bg-red-500 text-white">
+      {networkError}
+      <button onClick={switchNetwork} className="ml-4 p-5 outline-none rounded-md bg-blue-500">
+        Switch Network
+      </button>
+    </div>
+  )}
 };
 
 const checkActive = (active, setActive, router) => {

@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['https://jade-legal-quail-7.mypinata.cloud/ipfs/XKtAK2mMaV8SLd6umB6kbRE5T835Y6bYz3qhUK1DL3giSw1HRsIrtKps1sJsRiZI'],
+    domains: ['gateway.pinata.cloud'],
   },
   env: {
     BASE_URL: process.env.BASE_URL

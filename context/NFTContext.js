@@ -20,6 +20,7 @@ const fetchContract = (signerOrProvider) => new ethers.Contract(MarketAddress, M
 export const NFTProvider = ({ children }) => {
   const [currentAccount, setCurrentAccount] = useState('');
   const [isLoadingNFT, setIsLoadingNFT] = useState(false);
+  const [networkError, setNetworkError] = useState('');
   const nftCurrency = 'XFI';
   const auth = useRef(null);
   const client = useRef(null);
@@ -36,11 +37,98 @@ export const NFTProvider = ({ children }) => {
   };
 
   // Connect Wallet
+  // const connectWallet = async () => {
+  //   if (!window.ethereum) return alert('Please install MetaMask');
+  //   const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  //   setCurrentAccount(accounts[0]);
+  //   window.location.reload();
+  // };
+
   const connectWallet = async () => {
-    if (!window.ethereum) return alert('Please install MetaMask');
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    setCurrentAccount(accounts[0]);
-    window.location.reload();
+    if (!window.ethereum) {
+      alert("MetaMask is not installed!");
+      return;
+    }
+
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      setCurrentAccount(accounts[0]);
+      const address = await signer.getAddress();
+      setWalletAddress(address);
+
+      // localStorage.setItem("walletAddress", address);
+      // localStorage.setItem("timestamp", Date.now().toString());
+      checkNetwork();
+    } catch (error) {
+      console.error("Failed to connect wallet:", error.message);
+    }
+  };
+
+  const checkNetwork = async () => {
+    if (window.ethereum) {
+      try {
+        const network = await window.ethereum.request({
+          method: "eth_chainId"
+        });
+        console.log("Current Network:", network);
+        if (network !== STAKING_NETWORK_ID) {
+          setNetworkError("Please switch to the correct network.");
+        } else {
+          setNetworkError("");
+        }
+      } catch (error) {
+        console.error("Error checking network:", error);
+      }
+    }
+  };
+
+  const switchNetwork = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask is not installed!");
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: STAKING_NETWORK_ID }],
+      });
+      setNetworkError("");
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        addNetwork();
+      } else {
+        console.error("Error switching network:", switchError);
+      }
+    }
+  };
+
+  const addNetwork = async () => {
+    if (!window.ethereum) {
+      alert("MetaMask is not installed!");
+      return;
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: STAKING_NETWORK_ID,
+            chainName: "CrossFi Testnet",
+            rpcUrls: ["https://rpc.testnet.ms"],
+            nativeCurrency: {
+              name: "CrossFi",
+              symbol: "XFI",
+              decimals: 18
+            },
+            blockExplorerUrls: ["https://testnet.crossfi.io"],
+          },
+        ],
+      });
+    } catch (addError) {
+      console.error("Error adding network:", addError);
+    }
   };
 
   const fetchAuth = async () => {
@@ -322,12 +410,14 @@ export const NFTProvider = ({ children }) => {
         : await contract.resellToken(id, price, { value: listingPrice.toString() });
 
       setIsLoadingNFT(true);
-      const receipt=await transaction.wait();
+      const receipt = await transaction.wait();
       console.log('Transaction successful:', receipt);
     } catch (error) {
       console.error('Error during createSale:', error);
     }
   };
+
+ 
 
 
   const fetchNFTs = async () => {
@@ -341,7 +431,7 @@ export const NFTProvider = ({ children }) => {
     const items = await Promise.all(
       data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
         const tokenURI = await contract.tokenURI(tokenId);
-        const { data: { audio, name, description } } = await axios.get(tokenURI);
+        const { data: { audio,image, name, description } } = await axios.get(tokenURI);
 
         const cid = audio.split('/').pop(); // Extract CID from the audio URL
         const isPinned = await validateFileOnPinata(cid);
@@ -354,6 +444,7 @@ export const NFTProvider = ({ children }) => {
           tokenId: tokenId.toNumber(),
           seller,
           owner,
+          image,
           audio,
           name,
           description,
@@ -367,51 +458,110 @@ export const NFTProvider = ({ children }) => {
 
   const fetchMyNFTsOrListedNFTs = async (type) => {
     try {
+      console.log("Starting fetchMyNFTsOrListedNFTs with type:", type);
       setIsLoadingNFT(false);
 
+      // Connect to Web3
       const web3Modal = new Web3Modal();
       const connection = await web3Modal.connect();
       const provider = new ethers.providers.Web3Provider(connection);
       const signer = provider.getSigner();
       const contract = fetchContract(signer);
 
+      console.log("Connected to contract with signer:", signer);
+
+      const marketItems = await contract.fetchMarketItems();
+      console.log("Market items:", marketItems);
+
+      const myNFTs = await contract.fetchMyNFTs();
+      console.log("My NFTs:", myNFTs);
+
+      const listed = await contract.fetchItemsListed();
+      console.log("My Listed NFTs:", listed);
+
+      // Fetch data based on type
       const data = type === 'fetchItemsListed'
         ? await contract.fetchItemsListed()
         : await contract.fetchMyNFTs();
 
+      // const data=await contract.fetchItemsListed();
+
+      console.log("Raw data fetched from contract:", data);
+
       const items = await Promise.all(data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
-        const tokenURI = await contract.tokenURI(tokenId);
-        const { data: { image, name, description } } = await axios.get(tokenURI);
+        try {
+          console.log(`Processing tokenId: ${tokenId}`);
 
-        // Check if image is pinned on Pinata
-        const cid = image.split('/').pop(); // Extract CID from the image URL
-        const isPinned = await validateFileOnPinata(cid);
-        if (!isPinned) {
-          return null; // Skip unpinned items
+          // Fetch token URI and metadata
+          const tokenURI = await contract.tokenURI(tokenId);
+          console.log(`Fetched tokenURI for tokenId ${tokenId}:`, tokenURI);
+
+          const metadataResponse = await axios.get(tokenURI);
+          console.log(`Fetched metadata for tokenId ${tokenId}:`, metadataResponse.data);
+
+          const { data: { image, name, description,audio } } = metadataResponse;
+          console.log("metadata res: ",metadataResponse.data)
+
+          // Validate image on Pinata
+          const cid = image.split('/').pop(); // Extract CID
+          console.log(`Extracted CID for tokenId ${tokenId}:`, cid);
+
+          const isPinned = await validateFileOnPinata(cid);
+          if (!isPinned) {
+            console.warn(`Skipping tokenId ${tokenId}: Image not pinned on Pinata`);
+            return null; // Skip unpinned items
+          }
+
+          // Format price
+          const price = ethers.utils.formatUnits(unformattedPrice.toString(), 'ether');
+          console.log(`Formatted price for tokenId ${tokenId}:`, price);
+
+          console.log("Returning item: ", {
+            price,
+            tokenId: tokenId.toNumber(),
+            seller,
+            uploadImageToIPFS,
+            uploadMusicToIPFS,
+            owner,
+            image,
+            name,
+            description,
+            audio,
+            tokenURI,
+          });
+          
+
+          // Return formatted item
+          return {
+            price,
+            tokenId: tokenId.toNumber(),
+            seller,
+            uploadImageToIPFS,
+            uploadMusicToIPFS,
+            owner,
+            audio,
+            image,
+            name,
+            description,
+            tokenURI,
+          };
+        } catch (itemError) {
+          console.error(`Error processing tokenId ${tokenId}:`, itemError);
+          return null; // Skip problematic item
         }
-
-        const price = ethers.utils.formatUnits(unformattedPrice.toString(), 'ether');
-
-        return {
-          price,
-          tokenId: tokenId.toNumber(),
-          seller,
-          uploadImageToIPFS,
-          uploadMusicToIPFS,
-          owner,
-          image,
-          name,
-          description,
-          tokenURI,
-        };
       }));
 
-      return items.filter((item) => item !== null); // Filter out unpinned items
+      // Filter out null items and log the result
+      const validItems = items.filter((item) => item !== null);
+      console.log("Valid items:", validItems);
+      return validItems;
+
     } catch (error) {
-      console.error("Error fetching NFTs:", error);
+      console.error("Error in fetchMyNFTsOrListedNFTs:", error);
       return error;
     }
   };
+
 
   const getClient = (auth) => {
     if (!auth) {
@@ -466,7 +616,9 @@ export const NFTProvider = ({ children }) => {
         connectWallet,
         currentAccount,
         createNFT,
+        switchNetwork,
         fetchNFTs,
+        networkError,
         uploadImageToIPFS,
         uploadMusicToIPFS,
         createSale,
