@@ -179,7 +179,7 @@ export const NFTProvider = ({ children }) => {
       const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2ZmU2MjcwNC1iMzA3LTQ1NDEtOTg2Ny01ZjZlZjc4YTdhYTUiLCJlbWFpbCI6ImhhdGltdW53YWxhNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZWQ5MjY1OGVjODg2ZTdmNGUzZDkiLCJzY29wZWRLZXlTZWNyZXQiOiJiN2YwNzM0ZTQ3YTlkMjdjYjdjYjIyOTVkOWNjOWNmYjg5NjlkZWU0YTY0ZmY3MDRhMWJhMTE2NzYyNjE0Njc0IiwiZXhwIjoxNzYzOTMwNDAxfQ.ezRhZMhvJpx1b8hrE4ckHalD6g2sn8B0NpIBF1AHz2w'
         },
         body: formData,
       });
@@ -229,7 +229,7 @@ export const NFTProvider = ({ children }) => {
       const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2ZmU2MjcwNC1iMzA3LTQ1NDEtOTg2Ny01ZjZlZjc4YTdhYTUiLCJlbWFpbCI6ImhhdGltdW53YWxhNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZWQ5MjY1OGVjODg2ZTdmNGUzZDkiLCJzY29wZWRLZXlTZWNyZXQiOiJiN2YwNzM0ZTQ3YTlkMjdjYjdjYjIyOTVkOWNjOWNmYjg5NjlkZWU0YTY0ZmY3MDRhMWJhMTE2NzYyNjE0Njc0IiwiZXhwIjoxNzYzOTMwNDAxfQ.ezRhZMhvJpx1b8hrE4ckHalD6g2sn8B0NpIBF1AHz2w'
         },
         body: formData,
       });
@@ -268,7 +268,7 @@ export const NFTProvider = ({ children }) => {
       const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
+          Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2ZmU2MjcwNC1iMzA3LTQ1NDEtOTg2Ny01ZjZlZjc4YTdhYTUiLCJlbWFpbCI6ImhhdGltdW53YWxhNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZWQ5MjY1OGVjODg2ZTdmNGUzZDkiLCJzY29wZWRLZXlTZWNyZXQiOiJiN2YwNzM0ZTQ3YTlkMjdjYjdjYjIyOTVkOWNjOWNmYjg5NjlkZWU0YTY0ZmY3MDRhMWJhMTE2NzYyNjE0Njc0IiwiZXhwIjoxNzYzOTMwNDAxfQ.ezRhZMhvJpx1b8hrE4ckHalD6g2sn8B0NpIBF1AHz2w',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(body),
@@ -297,7 +297,7 @@ export const NFTProvider = ({ children }) => {
         {
           method: 'GET',
           headers: {
-            Authorization: `Bearer ${process.env.PINATA_JWT}`,
+            Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI2ZmU2MjcwNC1iMzA3LTQ1NDEtOTg2Ny01ZjZlZjc4YTdhYTUiLCJlbWFpbCI6ImhhdGltdW53YWxhNUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiZWQ5MjY1OGVjODg2ZTdmNGUzZDkiLCJzY29wZWRLZXlTZWNyZXQiOiJiN2YwNzM0ZTQ3YTlkMjdjYjdjYjIyOTVkOWNjOWNmYjg5NjlkZWU0YTY0ZmY3MDRhMWJhMTE2NzYyNjE0Njc0IiwiZXhwIjoxNzYzOTMwNDAxfQ.ezRhZMhvJpx1b8hrE4ckHalD6g2sn8B0NpIBF1AHz2w'
           },
         },
       );
