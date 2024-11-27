@@ -23,7 +23,7 @@ const Footer = () => {
         {/* Logo and Email Updates */}
         <div className="flexStart flex-1 flex-col">
           <div className="flexCenter cursor-pointer">
-           {/* {console.log(images)} */}
+            {/* {console.log(images)} */}
             <Image src={images.logo02} objectFit="contain" width={32} height={32} alt="logo" />
             <p className=" dark:text-white text-nft-dark font-semibold text-lg ml-1">TuneMint</p>
           </div>

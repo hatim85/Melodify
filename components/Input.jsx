@@ -14,7 +14,7 @@ const Input = ({ inputType, title, placeholder, handleClick }) => {
           <input
             type="number"
             className="flex w-full dark:bg-nft-black-1 bg-white outline-none"
-            placeholder={placeholder || 'Enter price in ' + nftCurrency}
+            placeholder={placeholder || "Enter price in " + nftCurrency}
             onChange={handleClick}
           />
           <p className="font-poppins dark:text-white text-nft-black-1 font-semibold text-xl">{nftCurrency}</p>

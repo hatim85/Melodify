@@ -17,27 +17,26 @@ const CreateMusicNFT = () => {
   const router = useRouter();
 
   // Music file upload handler
-const onDropMusic = useCallback(async (acceptedFile) => {
-  try {
-    const url = await uploadMusicToIPFS(acceptedFile[0]);
-    console.log("Uploaded music file URL:", url); // Add logging to check the result
-    setFileUrl(url);
-  } catch (error) {
-    console.error("Error uploading music:", error);
-  }
-}, [uploadMusicToIPFS]);
+  const onDropMusic = useCallback(async (acceptedFile) => {
+    try {
+      const url = await uploadMusicToIPFS(acceptedFile[0]);
+      // console.log("Uploaded music file URL:", url); // Add logging to check the result
+      setFileUrl(url);
+    } catch (error) {
+      console.error('Error uploading music:', error);
+    }
+  }, [uploadMusicToIPFS]);
 
-// Cover photo upload handler
-const onDropCover = useCallback(async (acceptedFile) => {
-  try {
-    const url = await uploadImageToIPFS(acceptedFile[0]);
-    console.log("Uploaded cover image URL:", url); // Add logging to check the result
-    setCoverUrl(url);
-  } catch (error) {
-    console.error("Error uploading cover image:", error);
-  }
-}, [uploadImageToIPFS]);
-
+  // Cover photo upload handler
+  const onDropCover = useCallback(async (acceptedFile) => {
+    try {
+      const url = await uploadImageToIPFS(acceptedFile[0]);
+      // console.log("Uploaded cover image URL:", url); // Add logging to check the result
+      setCoverUrl(url);
+    } catch (error) {
+      console.error('Error uploading cover image:', error);
+    }
+  }, [uploadImageToIPFS]);
 
   const musicDropzoneProps = useDropzone({
     onDrop: onDropMusic,
@@ -70,11 +69,11 @@ const onDropCover = useCallback(async (acceptedFile) => {
     // Validate inputs before creating the NFT
     if (!formInput.name || !formInput.description || !formInput.price || !fileUrl || !coverUrl) {
       alert('All fields and files are required!');
-      console.log("name: ",formInput.name);
-      console.log("description: ",formInput.description);
-      console.log("price: ",formInput.price);
-      console.log("fileUrl: ",fileUrl);
-      console.log("coverUrl: ",coverUrl);
+      // console.log("name: ",formInput.name);
+      // console.log("description: ",formInput.description);
+      // console.log("price: ",formInput.price);
+      // console.log("fileUrl: ",fileUrl);
+      // console.log("coverUrl: ",coverUrl);
       return;
     }
 
@@ -118,6 +117,7 @@ const onDropCover = useCallback(async (acceptedFile) => {
               <aside>
                 <audio controls>
                   <source src={fileUrl} type="audio/mp3" />
+                  <track kind="captions" srcLang="en" label="English captions" />
                   Your browser does not support the audio element.
                 </audio>
               </aside>

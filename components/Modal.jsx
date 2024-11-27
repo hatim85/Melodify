@@ -66,6 +66,7 @@ const Modal = ({ header, body, footer, handleClose }) => {
         <div className="flexCenter p-4">
           {footer || (
             <button
+              type="button"
               className="font-poppins text-white bg-nft-red-violet py-2 px-6 rounded-lg"
               onClick={handleClose}
             >

@@ -14,21 +14,19 @@ const MyNFTs = () => {
   const [activeSelect, setActiveSelect] = useState('Recently Added');
 
   useEffect(() => {
-    fetchMyNFTsOrListedNFTs('fetchItemsListed')
+    fetchMyNFTsOrListedNFTs('fetchMyNFTs')
       .then((items) => {
-        console.log("Fetched Items:", items);
+        // console.log("Fetched Items:", items);
 
         // If the data is an object, convert it to an array using Object.values
         // const parsedItems = Array.isArray(items) ? items : Object.values(items);
 
-        console.log("Parsed Items:", items);
+        // console.log("Parsed Items:", items);
 
         // Now filter for music NFTs by checking if the 'audio' field exists and is valid
-        const musicNFTs = items.filter(item =>
-          item.audio && typeof item.audio === 'string' && item.audio.trim() !== ''
-        );
+        const musicNFTs = items.filter((item) => item.audio && typeof item.audio === 'string' && item.audio.trim() !== '');
 
-        console.log("Filtered Music NFTs:", musicNFTs);
+        // console.log("Filtered Music NFTs:", musicNFTs);
 
         // Set state with the filtered data
         setNfts(musicNFTs);
@@ -36,12 +34,10 @@ const MyNFTs = () => {
         setIsLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching NFTs:", error);
+        console.error('Error fetching NFTs:', error);
         setIsLoading(false);
       });
   }, []);
-
-
 
   useEffect(() => {
     if (nfts.length) {
@@ -129,9 +125,8 @@ const MyNFTs = () => {
               </div>
             ))} */}
 
-            {nfts && Object.values(nfts).map((nft, key) =>
+            {/* {nfts && Object.values(nfts).map((nft, key) =>
               <div key={key}>
-                {/* NFT Image */}
                 <div className="relative w-full h-64">
                   <Image
                     src={nft.image || '/default-image.png'} // Ensure default image if no image URL
@@ -143,18 +138,14 @@ const MyNFTs = () => {
                   />
                 </div>
 
-                {/* NFT Name */}
                 <p className="font-poppins dark:text-white text-nft-black-1 text-xl font-semibold mt-3">{nft.name}</p>
 
-                {/* NFT Description */}
                 <p className="font-poppins dark:text-white text-nft-black-2 text-sm mt-2">{nft.description || 'No description available'}</p>
 
-                {/* NFT Price */}
                 <div className="mt-2">
                   <span className="text-lg font-bold">{nft.price ? `Price: ${nft.price} XFI` : 'Price not available'}</span>
                 </div>
 
-                {/* Render audio player if audio exists */}
                 {nft.audio && (
                   <audio controls className="mt-2 w-full">
                     <source src={nft.audio} type="audio/mp3" />
@@ -162,7 +153,9 @@ const MyNFTs = () => {
                   </audio>
                 )}
               </div>
-            )}
+            )} */}
+
+            {nfts && Object.values(nfts).map((nft, key) => <NFTCard key={key} nft={nft} image={nft.image} />)}
           </div>
         </div>
       )}

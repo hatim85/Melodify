@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
@@ -43,10 +43,11 @@ const PaymentBodyCmp = ({ nft, nftCurrency }) => (
 const NFTDetails = () => {
   const { isLoadingNFT, currentAccount, nftCurrency, buyNFT } = useContext(NFTContext);
   const [isLoading, setIsLoading] = useState(true);
-  const [nft, setNft] = useState({ image: '', tokenId: '', name: '', owner: '', price: '', seller: '', audioUrl: '' });
+  const [nft, setNft] = useState({ image: '', tokenId: '', name: '', owner: '', price: '', seller: '', audio: '' });
   const router = useRouter();
   const [paymentModal, setPaymentModal] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -57,10 +58,28 @@ const NFTDetails = () => {
   }, [router.isReady]);
 
   const checkout = async () => {
+    // console.log("checkout nft: ",nft)
     await buyNFT(nft);
 
     setPaymentModal(false);
     setSuccessModal(true);
+  };
+
+  const handlePlay = () => {
+    const audioElement = audioRef.current;
+    if (audioElement) {
+      if (currentAccount === nft.seller.toLowerCase()) {
+        // console.log("Owner detected, allowing full playtime");
+        return;
+      }
+      // Stop the audio after 10 seconds
+      setTimeout(() => {
+        if (!audioElement.paused) {
+          audioElement.pause();
+          audioElement.currentTime = 0; // Reset to start
+        }
+      }, 10000); // 10 seconds
+    }
   };
 
   if (isLoading) return <Loader />;
@@ -77,13 +96,14 @@ const NFTDetails = () => {
         <div className="flex flex-row sm:flex-col">
           <h2 className="font-poppins dark:text-white text-nft-black-1 font-semibold text-2xl minlg:text-3xl">{nft.name}</h2>
         </div>
-        
+
         {/* Music Player */}
         <div className="mt-10">
-          <p className="font-poppins dark:text-white text-nft-black-1 text-xs minlg:text-base font-normal">Listen to the music</p>
+          <p className="font-poppins dark:text-white text-nft-black-1 text-xs minlg:text-base font-normal">Preview music is available for 10 seconds. Buy Now and Listen more!</p>
           <div className="mt-3">
-            <audio controls className="w-full">
-              <source src={nft.audioUrl} type="audio/mpeg" />
+            <audio ref={audioRef} controls className="w-full" onPlay={handlePlay}>
+              <track kind="captions" srcLang="en" label="English captions" />
+              <source src={nft.audio} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
           </div>

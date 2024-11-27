@@ -20,7 +20,7 @@ const ResellNFT = () => {
     if (!tokenURI) return;
 
     const { data } = await axios.get(tokenURI);
-    
+
     // Set metadata for Music NFT (audio URL, name, artist)
     setPrice(data.price);
     setImage(data.image);
@@ -52,11 +52,11 @@ const ResellNFT = () => {
       <div className="w-3/5 md:w-full">
         <h1 className="font-poppins dark:text-white text-nft-black font-semibold text-2xl">Resell Music NFT</h1>
 
-        <Input 
-          inputType="number" 
-          title="Price" 
-          placeholder="NFT Price" 
-          handleClick={(e) => setPrice(e.target.value)} 
+        <Input
+          inputType="number"
+          title="Price"
+          placeholder="NFT Price"
+          handleClick={(e) => setPrice(e.target.value)}
         />
 
         {image && <img src={image} className="rounded mt-4" width={350} />}
@@ -70,6 +70,7 @@ const ResellNFT = () => {
         {audioUrl && (
           <div className="mt-5">
             <audio controls className="w-full">
+              <track kind="captions" srcLang="en" label="English captions" />
               <source src={audioUrl} type="audio/mp3" />
               Your browser does not support the audio element.
             </audio>

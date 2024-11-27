@@ -5,7 +5,7 @@ const nextConfig = {
     domains: ['gateway.pinata.cloud'],
   },
   env: {
-    BASE_URL: process.env.BASE_URL
+    BASE_URL: process.env.BASE_URL,
   },
 };
 

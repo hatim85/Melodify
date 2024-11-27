@@ -15,6 +15,7 @@ const MenuItems = ({ isMobile, active, setActive, setIsOpen }) => {
       case 0: return '/';
       case 1: return '/listed-nfts';
       case 2: return '/my-nfts';
+      case 3: return '/nft-details';
       default: return '/';
     }
   };
@@ -40,7 +41,7 @@ const MenuItems = ({ isMobile, active, setActive, setIsOpen }) => {
 };
 
 const ButtonGroup = ({ setActive, router, setIsOpen }) => {
-  const { connectWallet, currentAccount,switchNetwork,networkError } = useContext(NFTContext);
+  const { connectWallet, currentAccount, switchNetwork, networkError } = useContext(NFTContext);
 
   return currentAccount ? (
     <Button
@@ -53,20 +54,24 @@ const ButtonGroup = ({ setActive, router, setIsOpen }) => {
       }}
     />
   ) : (
-    <Button
-      btnName="Connect Wallet"
-      classStyles="mx-2 rounded-xl"
-      handleClick={connectWallet}
-    />
+    <>
+      <Button
+        btnName="Connect Wallet"
+        classStyles="mx-2 rounded-xl"
+        handleClick={connectWallet}
+      />
+      {
+        networkError && (
+          <div className="w-auto m-5 p-5 absolute bg-red-500 text-white">
+            {networkError}
+            <button onClick={switchNetwork} type="button" className="ml-4 p-5 outline-none rounded-md bg-blue-500">
+              Switch Network
+            </button>
+          </div>
+        )
+      };
+    </>
   );
-  {networkError && (
-    <div className="w-auto m-5 p-5 absolute bg-red-500 text-white">
-      {networkError}
-      <button onClick={switchNetwork} className="ml-4 p-5 outline-none rounded-md bg-blue-500">
-        Switch Network
-      </button>
-    </div>
-  )}
 };
 
 const checkActive = (active, setActive, router) => {
@@ -81,6 +86,9 @@ const checkActive = (active, setActive, router) => {
       if (active !== 'My NFT') setActive('My NFT');
       break;
     case '/create-nft':
+      setActive('');
+      break;
+    case '/nft-details':
       setActive('');
       break;
     default:
@@ -166,9 +174,9 @@ const Navbar = () => {
               alt="close"
               onClick={() => setIsOpen(false)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />   
+            />
           ) : (
-           <Image
+            <Image
               src={images.menu}
               objectFit="contain"
               width={25}
@@ -176,8 +184,9 @@ const Navbar = () => {
               alt="menu"
               onClick={() => setIsOpen(true)}
               className={theme === 'light' ? 'filter invert' : undefined}
-            />   
-          )}
+            />
+          )
+        }
 
         {isOpen && (
           <div className="fixed inset-0 top-65 dark:bg-nft-dark bg-white z-10 nav-h flex justify-between flex-col">
