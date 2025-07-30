@@ -1,0 +1,21 @@
+node_modules
+.env
+
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
+
+# Hardhat Ignition default folder for deployments against a local node
+ignition/deployments/chain-31337
+
+
+Deploying contracts with the account: 0x39987cA04006C3D9d895985E435a97489905EB75
+NFTMarketplace deployed to: 0xD2774132963115fB87896360F1ec4E3740af6421
