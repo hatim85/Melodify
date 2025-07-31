@@ -1,3 +1,4 @@
+// ... All your existing imports remain unchanged
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { NFTContext } from '../context/NFTContext';
@@ -28,10 +29,9 @@ const NFTDetails = () => {
         const tokenURI = await contract.tokenURI(tokenId);
         const metadata = await fetchMetadata(tokenURI);
         const actualOwner = await contract.ownerOf(tokenId);
-
         const marketItem = await contract.getMarketItem(tokenId);
 
-        const price = marketItem && marketItem.price
+        const price = marketItem?.price
           ? ethers.formatUnits(marketItem.price.toString(), 'ether')
           : '0';
 
@@ -75,11 +75,17 @@ const NFTDetails = () => {
     const audio = audioRef.current;
     if (audio) {
       setCurrentTime(audio.currentTime);
-      if (audio.currentTime >= 30) { // 30 second preview
+      const previewLimit = isPreviewOnly ? 10 : audio.duration;
+
+      if (audio.currentTime >= previewLimit) {
         audio.pause();
         audio.currentTime = 0;
         setIsPlaying(false);
         setCurrentTime(0);
+
+        if (isPreviewOnly) {
+          // alert('Buy this NFT to unlock the full audio.');
+        }
       }
     }
   };
@@ -87,7 +93,7 @@ const NFTDetails = () => {
   const handleLoadedMetadata = () => {
     const audio = audioRef.current;
     if (audio) {
-      setDuration(Math.min(audio.duration, 30)); // Max 30 seconds
+      setDuration(audio.duration); // full duration
     }
   };
 
@@ -138,36 +144,33 @@ const NFTDetails = () => {
   const marketplaceAddress = CONTRACT_ADDRESS.toLowerCase();
   const isOwner = owner?.toLowerCase() === currentAccount?.toLowerCase();
   const isListed = contractOwner?.toLowerCase() === marketplaceAddress;
+  const isPreviewOnly = !isOwner;
 
   const showListButton = isOwner && !isListed && !wasListed;
   const showResellButton = isOwner && !isListed && wasListed;
   const listedByCurrentUser = nft.seller?.toLowerCase() === currentAccount?.toLowerCase();
-const showBuyButton = isListed && !isOwner && !listedByCurrentUser;
+  const showBuyButton = isListed && !isOwner && !listedByCurrentUser;
 
-
+  
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column - Media */}
+       {/* Left Column - Media */}
         <div className="space-y-6">
-          {/* NFT Image */}
           <div className="relative group">
-            <img 
-              src={imageUrl} 
-              alt={name} 
-              className="w-full rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700" 
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </div>
 
-          {/* Audio Player */}
           <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-lg border border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
                 <span className="text-2xl">🎵</span>
-                <span>Audio Preview</span>
+                <span>{isPreviewOnly ? '10s Preview' : 'Full Audio'}</span>
               </h3>
-              <span className="text-sm text-gray-500 dark:text-gray-400">30s preview</span>
             </div>
 
             <audio
@@ -182,7 +185,6 @@ const showBuyButton = isListed && !isOwner && !listedByCurrentUser;
               className="hidden"
             />
 
-            {/* Custom Audio Controls */}
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <button
@@ -191,11 +193,11 @@ const showBuyButton = isListed && !isOwner && !listedByCurrentUser;
                 >
                   {isPlaying ? (
                     <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
                     </svg>
                   ) : (
                     <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
+                      <path d="M8 5v14l11-7z" />
                     </svg>
                   )}
                 </button>
@@ -206,13 +208,19 @@ const showBuyButton = isListed && !isOwner && !listedByCurrentUser;
                     <span>{formatTime(duration)}</span>
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-slate-600 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-gradient-to-r from-indigo-600 to-purple-600 h-2 rounded-full transition-all duration-100"
                       style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
+
+              {isPreviewOnly && (
+                <p className="text-sm text-red-500 text-center">
+                  🔒 Only 10s preview available. Buy the NFT to unlock full track.
+                </p>
+              )}
             </div>
           </div>
         </div>
