@@ -153,17 +153,22 @@ contract NFTMarketplace is ERC721URIStorage, ERC721Enumerable {
     /* Transfers ownership of the item, as well as funds between parties */
     function createMarketSale(uint256 tokenId) public payable {
         uint price = idToMarketItem[tokenId].price;
+        address seller = idToMarketItem[tokenId].seller; // ✅ Save seller before overwrite
+
         require(
             msg.value == price,
             "Please submit the asking price in order to complete the purchase"
         );
+
         idToMarketItem[tokenId].owner = payable(msg.sender);
         idToMarketItem[tokenId].sold = true;
-        idToMarketItem[tokenId].seller = payable(address(0));
+        idToMarketItem[tokenId].seller = payable(address(0)); // now it's safe
+
         _itemsSold.increment();
         _transfer(address(this), msg.sender, tokenId);
+
         payable(owner).transfer(listingPrice);
-        payable(idToMarketItem[tokenId].seller).transfer(msg.value);
+        payable(seller).transfer(msg.value); // ✅ Pay saved seller
     }
 
     /* Returns all unsold market items */
