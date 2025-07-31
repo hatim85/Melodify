@@ -3,7 +3,7 @@ import { useNFTContext } from '../context/NFTContext';
 import Input from '../components/Input';
 
 const CreateNFT = () => {
-  const [form, setForm] = useState({ name: '', description: '', price: '' });
+  const [form, setForm] = useState({ name: '', description: '' });
   const [image, setImage] = useState(null);
   const [music, setMusic] = useState(null);
   const { loading, setLoading, createNFT, uploadToIPFS } = useNFTContext();
@@ -13,15 +13,16 @@ const CreateNFT = () => {
   };
 
   const handleCreateNFT = async () => {
-    if (!form.name || !form.description || !form.price || !image || !music) {
+    if (!form.name || !form.description || !image || !music) {
       alert('Please fill all fields and upload both files.');
       return;
     }
+
     try {
       setLoading(true);
-      const coverUrl = await uploadToIPFS(image);
-      const musicUrl = await uploadToIPFS(music);
-      await createNFT(form.name, form.description, form.price, musicUrl, coverUrl);
+      const coverCid = await uploadToIPFS(image);
+      const musicCid = await uploadToIPFS(music);
+      await createNFT(form.name, form.description, musicCid, coverCid);
     } catch (err) {
       console.error('NFT creation failed:', err);
     } finally {
@@ -31,7 +32,7 @@ const CreateNFT = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Create Music NFT</h1>
+      <h1 className="text-3xl font-bold mb-6">Mint Music NFT</h1>
 
       <Input
         inputType="text"
@@ -44,12 +45,6 @@ const CreateNFT = () => {
         title="Description"
         value={form.description}
         handleClick={(e) => handleChange(e, 'description')}
-      />
-      <Input
-        inputType="number"
-        title="Price (in ETH)"
-        value={form.price}
-        handleClick={(e) => handleChange(e, 'price')}
       />
 
       <div className="my-4">
@@ -83,7 +78,7 @@ const CreateNFT = () => {
         disabled={loading}
         className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
       >
-        {loading ? 'Uploading & Minting...' : 'Create NFT'}
+        {loading ? 'Uploading & Minting...' : 'Mint NFT'}
       </button>
     </div>
   );

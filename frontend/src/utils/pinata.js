@@ -4,115 +4,56 @@ import axios from 'axios';
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT;
 const PINATA_GATEWAY_URL = import.meta.env.VITE_PINATA_GATEWAY;
 
-// Option 1: Direct API calls (less secure - exposes keys)
 export const uploadFileToIPFS = async (file) => {
-  if (!PINATA_JWT) throw new Error('Pinata JWT missing in env');
+  if (!PINATA_JWT) throw new Error('Pinata JWT missing');
 
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('pinataMetadata', JSON.stringify({ name: file.name }));
-    formData.append('pinataOptions', JSON.stringify({ cidVersion: 0 }));
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', file.name);
+  formData.append('network', 'public');
+  formData.append('keyvalues', JSON.stringify({ mimeType: file.type }));
 
-    const response = await axios.post(
-      'https://api.pinata.cloud/pinning/pinFileToIPFS',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${PINATA_JWT}`,
-        },
-      }
-    );
+  const res = await axios.post(
+    'https://uploads.pinata.cloud/v3/files',
+    formData,
+    { headers: { Authorization: `Bearer ${PINATA_JWT}` } }
+  );
 
-    return {
-      success: true,
-      cid: response.data.IpfsHash,
-      url: `${PINATA_GATEWAY_URL}${response.data.IpfsHash}`,
-    };
-  } catch (error) {
-    console.error('Error uploading file:', error.response?.data || error.message);
-    return {
-      success: false,
-      error: error.response?.data?.error || error.message,
-    };
-  }
+  const cidhash = res.data.data.cid;
+  const cid=`https://gateway.pinata.cloud/ipfs/${cidhash}`;
+  console.log('File uploaded and pinned:', cid);
+
+  return { success: true, cid };
 };
 
-
+// Upload and automatically pin JSON metadata
 export const uploadJSONToIPFS = async (jsonData) => {
-  try {
-    const response = await axios.post(
-      'https://api.pinata.cloud/pinning/pinJSONToIPFS',
-      jsonData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${PINATA_JWT}`,
-        },
-      }
-    );
+  if (!PINATA_JWT) throw new Error('Pinata JWT missing');
 
-    console.log('JSON uploaded:', response.data);
-    return {
-      success: true,
-      cid: response.data.IpfsHash,
-      url: `${PINATA_GATEWAY_URL}${response.data.IpfsHash}`,
-    };
-  } catch (error) {
-    console.error('Error uploading JSON:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
+  const payload = {
+    pinataContent: jsonData,
+    pinataMetadata: { name: 'metadata.json' },
+    pinataOptions: { cidVersion: 1 }
+  };
 
-// Option 2: Backend proxy approach (more secure)
-export const uploadFileThroughBackend = async (file) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await axios.post('/api/upload-to-pinata', formData, {
+  const res = await axios.post(
+    'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+    payload,
+    {
       headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${PINATA_JWT}`
+      }
+    }
+  );
 
-    return {
-      success: true,
-      cid: response.data.cid,
-      url: response.data.url,
-    };
-  } catch (error) {
-    console.error('Error uploading through backend:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  const cidhash = res.data.IpfsHash;
+  const cid=`https://gateway.pinata.cloud/ipfs/${cidhash}`;
+  console.log('JSON metadata uploaded and pinned:', cid);
+
+  return { success: true, cid };
 };
 
-export const uploadJSONThroughBackend = async (jsonData) => {
-  try {
-    const response = await axios.post('/api/upload-json-to-pinata', {
-      data: jsonData,
-    });
-
-    return {
-      success: true,
-      cid: response.data.cid,
-      url: response.data.url,
-    };
-  } catch (error) {
-    console.error('Error uploading JSON through backend:', error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
 
 // Utility function to fetch metadata from IPFS
 export const fetchFromIPFS = async (cid) => {
@@ -129,7 +70,5 @@ export const fetchFromIPFS = async (cid) => {
 export default {
   uploadFileToIPFS,
   uploadJSONToIPFS,
-  uploadFileThroughBackend,
-  uploadJSONThroughBackend,
   fetchFromIPFS,
 };

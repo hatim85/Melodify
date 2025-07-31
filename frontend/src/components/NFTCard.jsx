@@ -4,7 +4,7 @@ import { shortenAddress } from '../utils/shortenAddress';
 
 const NFTCard = ({ nft }) => {
   const navigate = useNavigate();
-
+  console.log('NFTCard rendered with NFT:', nft);
   return (
     <div
       className="bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-xl p-4 cursor-pointer transition-all duration-300"

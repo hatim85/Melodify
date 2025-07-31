@@ -56,15 +56,15 @@ export const NFTProvider = ({ children }) => {
     try {
       setLoading(true);
       console.log('Uploading file to Pinata IPFS:', file);
-      
+
       const result = await uploadFileToIPFS(file);
-      
+
       if (!result.success) {
         throw new Error(result.error);
       }
-      
-      console.log('File uploaded to IPFS URL:', result.url);
-      return result.url;
+
+      console.log('File uploaded to IPFS URL:', result.cid);
+      return result.cid;
     } catch (err) {
       console.error('Pinata upload error:', err);
       setError('Failed to upload to IPFS.');
@@ -74,90 +74,78 @@ export const NFTProvider = ({ children }) => {
     }
   };
 
-  const createNFT = async (name, desc, price, musicUrl, coverUrl) => {
-    console.log('Creating NFT with values:', { name, desc, price, musicUrl, coverUrl });
-    const metadata = { name, description: desc, music: musicUrl, image: coverUrl };
+  const createNFT = async (name, desc, musicCid, coverCid) => {
+    const metadata = { name, description: desc, music: musicCid, image: coverCid };
     setLoading(true);
     try {
       const result = await uploadJSONToIPFS(metadata);
-      
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      
-      console.log('NFT Metadata uploaded to:', result.url);
-      await createSale(result.url, price);
+      if (!result.success) throw new Error(result.error);
+      console.log('Metadata uploaded:', result.cid);
+
+      const receipt = await mintToken(result.cid); // NEW flow
+      navigate('/my-nfts'); // after minting
     } catch (err) {
       console.error('NFT creation error:', err);
-      setError('Failed to create NFT.');
+      setError('Failed to mint NFT.');
     } finally {
       setLoading(false);
     }
   };
 
-  const createSale = async (url, formInputPrice, isReselling = false, id = null) => {
-    try {
-      console.log('Creating sale...');
-      const { contract } = await getEthers();
 
-      const price = ethers.parseUnits(formInputPrice, 'ether');
-      const listingPrice = await contract.getListingPrice();
-      console.log('Parsed sale price:', price.toString());
-      console.log('Listing fee from contract:', listingPrice.toString());
+  // const createSale = async (url, formInputPrice, isReselling = false, id = null) => {
+  //   try {
+  //     console.log('Creating sale...');
+  //     const { contract } = await getEthers();
 
-      // Validate parameters
-      if (!url || !url.startsWith('https://')) {
-        throw new Error('Invalid IPFS URL');
-      }
-      if (!formInputPrice || isNaN(formInputPrice) || Number(formInputPrice) <= 0) {
-        throw new Error('Invalid price');
-      }
+  //     const price = ethers.parseUnits(formInputPrice, 'ether');
+  //     console.log('Parsed sale price:', price);
+  //     const listingPrice = await contract.getListingPrice();
+  //     console.log('Listing fee from contract:', listingPrice);
 
-      let transaction;
-      if (isReselling) {
-        if (!contract.resellToken) {
-          throw new Error('resellToken function not found in contract ABI');
-        }
-        console.log(`Reselling token ID ${id} with price ${price.toString()}`);
-        transaction = await contract.resellToken(id, price, {
-          value: listingPrice,
-        });
-      } else {
-        if (!contract.createToken) {
-          throw new Error('createToken function not found in contract ABI');
-        }
-        console.log(`Creating new token with URL ${url} and price ${price.toString()}`);
-        transaction = await contract.createToken(url, price, {
-          value: listingPrice,
-        });
-      }
+  //     if (!formInputPrice || isNaN(formInputPrice) || Number(formInputPrice) <= 0) {
+  //       throw new Error('Invalid price');
+  //     }
 
-      setLoading(true);
-      console.log('Waiting for transaction to be mined...');
-      const receipt = await transaction.wait();
-      console.log('Transaction confirmed:', receipt);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error creating sale:', error);
-      setError(`Transaction failed: ${error.reason || error.message || 'Unknown error'}`);
-      setLoading(false);
-    }
-  };
+  //     let transaction;
+  //     if (isReselling) {
+  //       if (!contract.resellToken) {
+  //         throw new Error('resellToken function not found in contract ABI');
+  //       }
+  //       console.log(`Reselling token ID ${id} with price ${price.toString()}`);
+  //       transaction = await contract.resellToken(id, price, {
+  //         value: listingPrice,
+  //       });
+  //     } else {
+  //       if (!contract.createToken) {
+  //         throw new Error('createToken function not found in contract ABI');
+  //       }
+  //       console.log(`Creating new token with URL ${url} and price ${price.toString()}`);
+  //       transaction = await contract.createToken(url, price, {
+  //         value: listingPrice,
+  //       });
+  //     }
+
+  //     setLoading(true);
+  //     console.log('Waiting for transaction to be mined...');
+  //     const receipt = await transaction.wait();
+  //     console.log('Transaction confirmed:', receipt);
+  //     setLoading(false);
+  //   } catch (error) {
+  //     console.error('Error creating sale:', error);
+  //     setError(`Transaction failed: ${error.reason || error.message || 'Unknown error'}`);
+  //     setLoading(false);
+  //   }
+  // };
 
   const fetchMetadata = async (tokenURI) => {
     try {
-      console.log('Fetching metadata from tokenURI:', tokenURI);
-      const gatewayKey = import.meta.env.VITE_PINATA_GATEWAY_KEY;
-      if (!gatewayKey) {
-        throw new Error('Pinata Gateway Key is not configured in .env');
-      }
-
-      const response = await axios.get(tokenURI, {
-        headers: {
-          'X-Pinata-Gateway-Key': gatewayKey, // Pass Gateway Key in headers
-        },
-      });
-      return response.data;
+      const res = await axios.get(tokenURI,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      console.log('Fetching metadata from tokenURI:', res);
+      console.log('Metadata fetched successfully:', res);
+      return res.data;
     } catch (error) {
       console.error('Error fetching metadata:', error);
       throw error;
@@ -166,33 +154,48 @@ export const NFTProvider = ({ children }) => {
 
   const fetchMyNFTs = async () => {
     try {
-      const { contract } = await getEthers();
-      const data = await contract.fetchMyNFTs();
-      
+      const { contract, signer } = await getEthers();
+      const address = await signer.getAddress();
+      const balance = await contract.balanceOf(address);
+      const nftCount = Number(balance);
+
       const items = await Promise.all(
-        data.map(async (item) => {
+        Array.from({ length: nftCount }).map(async (_, i) => {
           try {
-            const tokenURI = await contract.tokenURI(item.tokenId);
+            const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+            const tokenURI = await contract.tokenURI(tokenId);
             const metadata = await fetchMetadata(tokenURI);
-            
+
+            // Fetch market item info for this tokenId
+            let seller = null;
+            let marketOwner = null;
+            try {
+              const marketItem = await contract.idToMarketItem(tokenId);
+              seller = marketItem.seller;
+              marketOwner = marketItem.owner;
+            } catch (e) {
+              // If not listed, ignore
+            }
+
             return {
-              tokenId: Number(item.tokenId),
-              seller: item.seller,
-              owner: item.owner,
-              price: ethers.formatUnits(item.price.toString(), 'ether'),
+              tokenId: Number(tokenId),
+              owner: address,
+              price: '0', // not listed
               image: metadata.image,
               name: metadata.name,
               description: metadata.description,
               music: metadata.music,
               tokenURI,
+              seller,
+              marketOwner,
             };
           } catch (metaErr) {
-            console.warn(`Metadata fetch error for tokenId ${item.tokenId}:`, metaErr);
+            console.warn(`Metadata fetch error for index ${i}:`, metaErr);
             return null;
           }
         })
       );
-      
+
       const filteredItems = items.filter(Boolean);
       return filteredItems;
     } catch (err) {
@@ -202,12 +205,49 @@ export const NFTProvider = ({ children }) => {
     }
   };
 
+  const mintToken = async (tokenURI) => {
+    try {
+      const { contract } = await getEthers();
+      const tx = await contract.createToken(tokenURI); // assumes this exists in your contract
+      setLoading(true);
+      const receipt = await tx.wait();
+      setLoading(false);
+      console.log('NFT Minted:', receipt);
+      return receipt;
+    } catch (err) {
+      console.error('Minting failed:', err);
+      setError('Minting failed.');
+      setLoading(false);
+      throw err;
+    }
+  };
+
+  const listNFT = async (tokenId, formInputPrice) => {
+    try {
+      const { contract } = await getEthers();
+      const price = ethers.parseUnits(formInputPrice, 'ether');
+      const listingPrice = await contract.getListingPrice();
+
+      const tx = await contract.listToken(tokenId, price, { value: listingPrice });
+      setLoading(true);
+      await tx.wait();
+      setLoading(false);
+      console.log(`Token ${tokenId} listed for ${formInputPrice} ETH`);
+    } catch (err) {
+      console.error('Listing failed:', err);
+      setError('Listing failed.');
+      setLoading(false);
+      throw err;
+    }
+  };
+
+
   const fetchListedNFTs = async () => {
     try {
       const { contract } = await getEthers();
       const data = await contract.fetchItemsListed();
       console.log('Raw fetchItemsListed data:', data);
-      
+
       if (!Array.isArray(data) || data.length === 0) {
         setListedNFTs([]);
         return [];
@@ -223,7 +263,8 @@ export const NFTProvider = ({ children }) => {
             const price = ethers.formatUnits((item.price || item[3]).toString(), 'ether');
 
             const tokenURI = await contract.tokenURI(tokenId);
-            const metadata = await fetchFromIPFS(tokenURI);
+            console.log(`Fetching metadata for tokenId ${tokenId} from URI:`, tokenURI);
+            const metadata = await fetchMetadata(tokenURI);
             console.log(`Fetched metadata for tokenId ${tokenId}:`, metadata);
             return {
               tokenId,
@@ -253,16 +294,36 @@ export const NFTProvider = ({ children }) => {
     }
   };
 
+  const resellNFT = async (tokenId, formInputPrice) => {
+  try {
+    const { contract } = await getEthers();
+    const price = ethers.parseUnits(formInputPrice, 'ether');
+    const listingPrice = await contract.getListingPrice();
+
+    const tx = await contract.resellToken(tokenId, price, { value: listingPrice });
+    setLoading(true);
+    await tx.wait();
+    setLoading(false);
+    console.log(`Token ${tokenId} resold for ${formInputPrice} ETH`);
+  } catch (err) {
+    console.error('Reselling failed:', err);
+    setError('Reselling failed.');
+    setLoading(false);
+    throw err;
+  }
+};
+
+
   const fetchNFTs = async () => {
     try {
       const { contract } = await getEthers();
       const data = await contract.fetchMarketItems();
-      
+
       if (!Array.isArray(data) || data.length === 0) {
         setNFTs([]);
         return;
       }
-      
+
       console.log('Raw fetchMarketItems data:', data);
 
       const items = await Promise.all(
@@ -270,7 +331,7 @@ export const NFTProvider = ({ children }) => {
           try {
             const tokenURI = await contract.tokenURI(item.tokenId);
             const metadata = await fetchMetadata(tokenURI);
-            
+
             return {
               tokenId: Number(item.tokenId),
               seller: item.seller,
@@ -303,14 +364,14 @@ export const NFTProvider = ({ children }) => {
       setLoading(true);
       const { contract } = await getEthers();
       const price = ethers.parseUnits(nft.price.toString(), 'ether');
-      
+
       const transaction = await contract.createMarketSale(nft.tokenId, {
         value: price,
       });
-      
+
       await transaction.wait();
       console.log('NFT purchased successfully');
-      
+
       // Refresh NFTs after purchase
       await fetchNFTs();
       await fetchMyNFTs();
@@ -353,10 +414,12 @@ export const NFTProvider = ({ children }) => {
         uploadToIPFS,
         createNFT,
         fetchNFTs,
-        createSale,
+        listNFT,
         fetchMyNFTs,
         fetchListedNFTs,
         buyNFT,
+        resellNFT,
+        fetchMetadata,
         nfts,
         listedNFTs,
         loading,

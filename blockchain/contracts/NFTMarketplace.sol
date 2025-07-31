@@ -4,10 +4,11 @@ pragma solidity ^0.8.28;
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
 import "hardhat/console.sol";
 
-contract NFTMarketplace is ERC721URIStorage {
+contract NFTMarketplace is ERC721URIStorage, ERC721Enumerable {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     Counters.Counter private _itemsSold;
@@ -16,6 +17,7 @@ contract NFTMarketplace is ERC721URIStorage {
     address payable owner;
 
     mapping(uint256 => MarketItem) private idToMarketItem;
+    mapping(uint256 => address) private minters;
 
     struct MarketItem {
         uint256 tokenId;
@@ -51,26 +53,52 @@ contract NFTMarketplace is ERC721URIStorage {
         return listingPrice;
     }
 
+    function getMarketItem(
+        uint256 tokenId
+    ) public view returns (MarketItem memory) {
+        return idToMarketItem[tokenId];
+    }
+
     /* Mints a token and lists it in the marketplace */
     function createToken(
-        string memory tokenURI,
-        uint256 price
+        string memory metadataURI
     ) public payable returns (uint) {
         _tokenIds.increment();
         uint256 newTokenId = _tokenIds.current();
 
         _mint(msg.sender, newTokenId);
-        _setTokenURI(newTokenId, tokenURI);
-        createMarketItem(newTokenId, price);
+        _setTokenURI(newTokenId, metadataURI);
+        minters[newTokenId] = msg.sender;
+
         return newTokenId;
     }
 
-    function createMarketItem(uint256 tokenId, uint256 price) private {
+    function getMinter(uint256 tokenId) public view returns (address) {
+        return minters[tokenId];
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 batchSize
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721Enumerable, ERC721URIStorage) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
+
+    function listToken(uint256 tokenId, uint256 price) public payable {
         require(price > 0, "Price must be at least 1 wei");
         require(
             msg.value == listingPrice,
             "Price must be equal to listing price"
         );
+        require(ownerOf(tokenId) == msg.sender, "You must own the token");
 
         idToMarketItem[tokenId] = MarketItem(
             tokenId,
@@ -88,6 +116,18 @@ contract NFTMarketplace is ERC721URIStorage {
             price,
             false
         );
+    }
+
+    function _burn(
+        uint256 tokenId
+    ) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
     }
 
     /* allows someone to resell a token they have purchased */
