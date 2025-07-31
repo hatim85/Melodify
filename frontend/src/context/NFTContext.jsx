@@ -92,52 +92,6 @@ export const NFTProvider = ({ children }) => {
     }
   };
 
-
-  // const createSale = async (url, formInputPrice, isReselling = false, id = null) => {
-  //   try {
-  //     console.log('Creating sale...');
-  //     const { contract } = await getEthers();
-
-  //     const price = ethers.parseUnits(formInputPrice, 'ether');
-  //     console.log('Parsed sale price:', price);
-  //     const listingPrice = await contract.getListingPrice();
-  //     console.log('Listing fee from contract:', listingPrice);
-
-  //     if (!formInputPrice || isNaN(formInputPrice) || Number(formInputPrice) <= 0) {
-  //       throw new Error('Invalid price');
-  //     }
-
-  //     let transaction;
-  //     if (isReselling) {
-  //       if (!contract.resellToken) {
-  //         throw new Error('resellToken function not found in contract ABI');
-  //       }
-  //       console.log(`Reselling token ID ${id} with price ${price.toString()}`);
-  //       transaction = await contract.resellToken(id, price, {
-  //         value: listingPrice,
-  //       });
-  //     } else {
-  //       if (!contract.createToken) {
-  //         throw new Error('createToken function not found in contract ABI');
-  //       }
-  //       console.log(`Creating new token with URL ${url} and price ${price.toString()}`);
-  //       transaction = await contract.createToken(url, price, {
-  //         value: listingPrice,
-  //       });
-  //     }
-
-  //     setLoading(true);
-  //     console.log('Waiting for transaction to be mined...');
-  //     const receipt = await transaction.wait();
-  //     console.log('Transaction confirmed:', receipt);
-  //     setLoading(false);
-  //   } catch (error) {
-  //     console.error('Error creating sale:', error);
-  //     setError(`Transaction failed: ${error.reason || error.message || 'Unknown error'}`);
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchMetadata = async (tokenURI) => {
     try {
       const res = await axios.get(tokenURI,
@@ -226,9 +180,8 @@ export const NFTProvider = ({ children }) => {
     try {
       const { contract } = await getEthers();
       const price = ethers.parseUnits(formInputPrice, 'ether');
-      const listingPrice = await contract.getListingPrice();
 
-      const tx = await contract.listToken(tokenId, price, { value: listingPrice });
+      const tx = await contract.listToken(tokenId, price);
       setLoading(true);
       await tx.wait();
       setLoading(false);
@@ -298,9 +251,8 @@ export const NFTProvider = ({ children }) => {
   try {
     const { contract } = await getEthers();
     const price = ethers.parseUnits(formInputPrice, 'ether');
-    const listingPrice = await contract.getListingPrice();
 
-    const tx = await contract.resellToken(tokenId, price, { value: listingPrice });
+    const tx = await contract.resellToken(tokenId, price);
     setLoading(true);
     await tx.wait();
     setLoading(false);

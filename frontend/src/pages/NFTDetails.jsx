@@ -100,7 +100,6 @@ const NFTDetails = () => {
     try {
       const action = showResellButton ? resellNFT : listNFT;
       await action(nft.tokenId, priceInput);
-      alert('NFT listed successfully');
       navigate('/listed-nfts');
     } catch (err) {
       console.error('Listing failed:', err);
