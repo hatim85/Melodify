@@ -1,5 +1,7 @@
 # Melodify
 
+<img width="1426" height="806" alt="Melodify" src="https://github.com/user-attachments/assets/0f196279-7877-45d8-abf3-66cd7d4a3fd8" />
+
 A full-stack **Music NFT Marketplace** built with **React (Vite)**, **Ethers.js v6**, **Pinata/IPFS**, and **Solidity**. Users can mint, list, buy, and resell music NFTs with cover art and audio metadata stored immutably via IPFS.
 
 ---
