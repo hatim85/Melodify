@@ -301,10 +301,7 @@ const NFTDetails = () => {
                     size="lg"
                   />
                 ) : (
-                  <div className="text-center p-6 bg-gray-50 dark:bg-slate-700/50 rounded-xl">
-                    <div className="text-4xl mb-2">🔒</div>
-                    <p className="text-gray-600 dark:text-gray-400">This NFT is not for sale</p>
-                  </div>
+                  <></>
                 )}
               </div>
 
